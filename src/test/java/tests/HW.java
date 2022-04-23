@@ -1,14 +1,17 @@
 package tests;
 
+import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
+import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
-import static io.restassured.http.ContentType.valueOf;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasValue;
 
 public class HW {
 
@@ -33,17 +36,6 @@ public class HW {
                 .body("data.avatar", hasItems("https://reqres.in/img/faces/8-image.jpg"));  // проверяет, что есть аватар по данной ссылке
     }
 
-    /*@Test
-    void listUsersAvatarIsNotNull() { //получает список пользователей и проверяет, что нет пустых аватаров
-        given()
-                .contentType(JSON)
-                //.when()
-                .get("https://reqres.in/api/users?page=2")
-                .then()
-                .assertThat().body("data.id").
-        int[] array;
-
-*/
     @Test
     void listUsersHasName() { //получает список пользователей и проверяет, что он содержит каке-то имена из списка
         given()
@@ -77,7 +69,44 @@ public class HW {
                 .statusCode(404);
     }
 
+    @Test
+    void countTotal() {
+        Integer response =
+                get("https://reqres.in/api/users?page=2")
+                        .then()
+                        .statusCode(200)
+                        .extract().path("total");
 
+        System.out.println(response);
+        assertThat(response).isEqualTo(12);
+    }
+
+    @Test
+    void countUsers() {
+        ArrayList response =
+                get("https://reqres.in/api/users?page=2")
+                        .then()
+                        .statusCode(200)
+                        .extract().path("data.id");
+
+        System.out.println("Количество пользователей = " + response.size());
+    }
+
+    @Test
+    void avatarIsNotNull() {
+        ArrayList<String> response =       //создаем arraylist из стринговых значений ответа
+                get("https://reqres.in/api/users?page=2")
+                        .then()
+                        .statusCode(200)
+                        .extract().path("data.avatar");
+        //response.set(0, null);  если установить в один из элементов массива null, то тест упадет
+
+        for (int i=0; i<response.size(); i++) {      // выполняется проверка, что каждый элемент массива не пустой, то есть аватар установлен
+            assertThat(response.get(i)).isNotNull();
+        }
+        System.out.println("Проверено, что у всех пользователей установлен аватар");
+
+    }
 
 }
 
